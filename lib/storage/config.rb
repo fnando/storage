@@ -29,7 +29,7 @@ module Storage
     # Override setter so we can automatically define the strategy class
     # based on its registered name.
     def self.strategy=(strategy)
-      self.strategy_class = eval(Storage::Strategies::STRATEGIES[strategy])
+      @strategy_class = eval(Storage::Strategies::STRATEGIES[strategy])
       @strategy = strategy
     end
   end

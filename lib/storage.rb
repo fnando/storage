@@ -8,39 +8,37 @@ module Storage
   autoload :Strategies,   "storage/strategies"
   autoload :Version,      "storage/version"
 
-  class << self
-    # Set up the storage options.
-    #
-    #   Storage.setup do |config|
-    #     config.strategy = :s3
-    #   end
-    #
-    # Check Storage::Config for available options.
-    #
-    def setup(&block)
-      yield Config
-      strategy.prepare!
-    end
+  # Set up the storage options.
+  #
+  #   Storage.setup do |config|
+  #     config.strategy = :s3
+  #   end
+  #
+  # Check Storage::Config for available options.
+  #
+  def self.setup(&block)
+    yield Config
+    strategy.prepare!
+  end
 
-    # A shortcut to the current strategy.
-    def strategy
-      Config.strategy_class
-    end
+  # A shortcut to the current strategy.
+  def self.strategy
+    Config.strategy_class
+  end
 
-    # Save a file.
-    def store(*args)
-      strategy.store(*args)
-    end
+  # Save a file.
+  def self.store(*args)
+    strategy.store(*args)
+  end
 
-    # Destroy a file.
-    def remove(*args)
-      strategy.remove(*args)
-    end
+  # Destroy a file.
+  def self.remove(*args)
+    strategy.remove(*args)
+  end
 
-    # Retrieve a file.
-    def get(*args)
-      strategy.get(*args)
-    end
+  # Retrieve a file.
+  def self.get(*args)
+    strategy.get(*args)
   end
 end
 

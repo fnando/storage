@@ -21,14 +21,14 @@ describe Storage::Strategies::S3 do
     options = {:access_key_id => "abc", :secret_access_key => "123"}
     AWS::S3::Base.should_receive(:establish_connection!).with(options)
 
-    Storage::Strategies::S3.prepare!
+    Storage::Strategies::S3.connect!
   end
 
   it "should not reconnect when a connection is already established" do
     AWS::S3::Base.should_receive(:connected?).and_return(true)
     AWS::S3::Base.should_not_receive(:establish_connection!)
 
-    Storage::Strategies::S3.prepare!
+    Storage::Strategies::S3.connect!
   end
 
   it "should save a file using file handler" do
@@ -51,8 +51,6 @@ describe Storage::Strategies::S3 do
   end
 
   it "should raise when trying to removing an unexesting file" do
-    pending "spec is failing but real code works"
-
     Storage::Strategies::S3.should_receive(:find_object).and_raise(AWS::S3::NoSuchKey)
 
     expect {
@@ -70,8 +68,6 @@ describe Storage::Strategies::S3 do
   end
 
   it "should raise when trying to retrieve an unexesting file" do
-    pending "spec is failing but real code works"
-
     AWS::S3::S3Object.should_receive(:find).with("lorem.txt", "files").and_raise(AWS::S3::NoSuchKey)
     AWS::S3::S3Object.should_not_receive(:url_for)
 

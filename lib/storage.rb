@@ -18,7 +18,6 @@ module Storage
   #
   def self.setup(&block)
     yield Config
-    strategy.prepare!
   end
 
   # A shortcut to the current strategy.

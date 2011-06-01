@@ -3,7 +3,7 @@ module Storage
     module S3
       extend self
 
-      def prepare!
+      def connect!
         AWS::S3::Base.establish_connection!({
           :access_key_id     => Storage::Config.access_key,
           :secret_access_key => Storage::Config.secret_key
@@ -11,6 +11,7 @@ module Storage
       end
 
       def get(file, options = {})
+        connect!
         object = find_object(file, options)
         AWS::S3::S3Object.url_for(file, options[:bucket], :authenticated => false)
       rescue AWS::S3::NoSuchKey, AWS::S3::NoSuchBucket
@@ -18,16 +19,18 @@ module Storage
       end
 
       def store(file, options = {})
+        connect!
         object = find_object(file, options) rescue nil
 
         raise Storage::FileAlreadyExistsError if object
 
         bucket = find_bucket_or_create(options[:bucket])
         file = File.open(file, "rb") unless file.respond_to?(:read) && !file.kind_of?(Pathname)
-        AWS::S3::S3Object.store(options[:name], file, bucket.name, :access => :public_read)
+        AWS::S3::S3Object.store(options[:name], file, bucket.name, :access => options.fetch(:access, :public_read))
       end
 
       def remove(file, options = {})
+        connect!
         object = find_object(file, options)
         object.delete
       rescue AWS::S3::NoSuchKey, AWS::S3::NoSuchBucket

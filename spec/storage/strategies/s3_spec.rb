@@ -31,6 +31,18 @@ describe Storage::Strategies::S3 do
     Storage::Strategies::S3.connect!
   end
 
+  it "should disconnect when connection is established" do
+    AWS::S3::Base.should_receive(:connected?).and_return(true)
+    AWS::S3::Base.should_receive(:disconnect!)
+    Storage::Strategies::S3.disconnect!
+  end
+
+  it "should ignore disconnection when connection is not established" do
+    AWS::S3::Base.should_receive(:connected?).and_return(false)
+    AWS::S3::Base.should_not_receive(:disconnect!)
+    Storage::Strategies::S3.disconnect!
+  end
+
   it "should save a file using file handler" do
     handler = File.open(@source)
     AWS::S3::S3Object.should_receive(:store).with("lorem.txt", handler, "files", :access => :public_read)

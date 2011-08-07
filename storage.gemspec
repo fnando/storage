@@ -23,6 +23,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency "fakeweb"      , "~> 1.3.0"
   s.add_development_dependency "rspec-rails"  , "~> 2.5.0"
   s.add_development_dependency "nokogiri"     , "~> 1.4.4"
-  s.add_development_dependency "sqlite3-ruby" , "~> 1.3.3"
+  s.add_development_dependency "sqlite3"      , "~> 1.3.3"
   s.add_development_dependency "ruby-debug19" if RUBY_VERSION >= "1.9"
 end

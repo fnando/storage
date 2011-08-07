@@ -10,6 +10,10 @@ module Storage
         }) unless AWS::S3::Base.connected?
       end
 
+      def disconnect!
+        AWS::S3::Base.disconnect! if AWS::S3::Base.connected?
+      end
+
       def get(file, options = {})
         connect!
         object = find_object(file, options)

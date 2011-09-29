@@ -57,7 +57,7 @@ describe Storage::Strategies::S3 do
   it "should remove an existing file" do
     object = mock("object")
     object.should_receive(:delete).and_return(true)
-    Storage::Strategies::S3.should_receive(:find_object).with("lorem.txt", :bucket => "files").and_return(object)
+    Storage::Strategies::S3.should_receive(:find_object).with(:name => "lorem.txt", :bucket => "files").and_return(object)
 
     Storage.remove("lorem.txt", :bucket => "files").should be_true
   end
@@ -91,10 +91,10 @@ describe Storage::Strategies::S3 do
   it "should raise when saving a file that already exists" do
     object = mock("object")
     options = {:name => "lorem.txt", :bucket => "files"}
-    Storage::Strategies::S3.should_receive(:find_object).with(@source, options).and_return(object)
+    Storage::Strategies::S3.should_receive(:find_object).with(options).and_return(object)
 
     expect {
-      Storage.store(@source, :name => "lorem.txt", :bucket => "files")
+      Storage.store(@source, options)
     }.to raise_error(Storage::FileAlreadyExistsError)
   end
 end

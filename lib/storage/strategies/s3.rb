@@ -16,7 +16,7 @@ module Storage
 
       def get(file, options = {})
         connect!
-        object = find_object(file, options)
+        object = find_object(options)
         AWS::S3::S3Object.url_for(file, options[:bucket], :authenticated => false)
       rescue AWS::S3::NoSuchKey, AWS::S3::NoSuchBucket
         raise Storage::MissingFileError
@@ -24,7 +24,7 @@ module Storage
 
       def store(file, options = {})
         connect!
-        object = find_object(file, options) rescue nil
+        object = find_object(options) rescue nil
 
         raise Storage::FileAlreadyExistsError if object
 
@@ -35,7 +35,7 @@ module Storage
 
       def remove(file, options = {})
         connect!
-        object = find_object(file, options)
+        object = find_object(options)
         object.delete
       rescue AWS::S3::NoSuchKey, AWS::S3::NoSuchBucket
         raise Storage::MissingFileError
@@ -45,8 +45,8 @@ module Storage
         AWS::S3::Bucket.find(name)
       end
 
-      def find_object(file, options = {})
-        AWS::S3::S3Object.find(file, options[:bucket])
+      def find_object(options = {})
+        AWS::S3::S3Object.find(options[:name], options[:bucket])
       end
 
       def find_bucket_or_create(name)

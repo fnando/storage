@@ -46,7 +46,8 @@ module Storage
       end
 
       def find_object(file, options = {})
-        AWS::S3::S3Object.find(file, options[:bucket])
+        path = options.fetch(:name, file)
+        AWS::S3::S3Object.find(path, options[:bucket])
       end
 
       def find_bucket_or_create(name)

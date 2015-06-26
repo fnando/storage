@@ -3,6 +3,12 @@ module Storage
     module FileSystem
       extend self
 
+      def connect!
+      end
+
+      def disconnect!
+      end
+
       def prepare!
         FileUtils.mkdir_p File.expand_path(Storage::Config.path)
       end

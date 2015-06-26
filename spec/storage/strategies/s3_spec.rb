@@ -2,13 +2,13 @@ require "spec_helper"
 
 describe Storage::Strategies::S3 do
   before do
+    @adapter = Storage::Strategies::S3
     @source = RESOURCES.join("file.txt")
     @destiny = TMP.join("lorem.txt")
-    @bucket = mock("bucket", :name => "files")
+    @connection = double("connection")
+    @bucket = double("bucket")
 
-    AWS::S3::Base.stub :establish_connection!
-    AWS::S3::Bucket.stub :find => @bucket
-    AWS::S3::S3Object.stub :store
+    allow(@adapter).to receive(:connection).and_return(@connection)
 
     Storage.setup do |c|
       c.strategy = :s3
@@ -17,84 +17,95 @@ describe Storage::Strategies::S3 do
     end
   end
 
-  it "should establish connection" do
-    options = {:access_key_id => "abc", :secret_access_key => "123"}
-    AWS::S3::Base.should_receive(:establish_connection!).with(options)
-
-    Storage::Strategies::S3.connect!
-  end
-
-  it "should not reconnect when a connection is already established" do
-    AWS::S3::Base.should_receive(:connected?).and_return(true)
-    AWS::S3::Base.should_not_receive(:establish_connection!)
-
-    Storage::Strategies::S3.connect!
-  end
-
-  it "should disconnect when connection is established" do
-    AWS::S3::Base.should_receive(:connected?).and_return(true)
-    AWS::S3::Base.should_receive(:disconnect!)
-    Storage::Strategies::S3.disconnect!
-  end
-
-  it "should ignore disconnection when connection is not established" do
-    AWS::S3::Base.should_receive(:connected?).and_return(false)
-    AWS::S3::Base.should_not_receive(:disconnect!)
-    Storage::Strategies::S3.disconnect!
-  end
-
   it "should save a file using file handler" do
     handler = File.open(@source)
-    AWS::S3::S3Object.should_receive(:store).with("lorem.txt", handler, "files", :access => :public_read)
+
+    expect(@connection).to receive_message_chain('directories.get').with('files').and_return(@bucket)
+    expect(@adapter).to receive_message_chain('find_object').and_return(nil)
+    expect(@bucket).to receive_message_chain('files.create').with(:key => 'lorem.txt', :body => handler, :public => true)
+
     Storage.store(handler, :name => "lorem.txt", :bucket => "files")
   end
 
   it "should save a file using a path" do
-    AWS::S3::S3Object.should_receive(:store).with("lorem.txt", kind_of(File), "files", :access => :public_read)
+    expect(@connection).to receive_message_chain('directories.get').with('files').and_return(@bucket)
+    expect(@adapter).to receive_message_chain('find_object').and_return(nil)
+    expect(@bucket).to receive_message_chain('files.create').with(:key => 'lorem.txt', :body => kind_of(File), :public => true)
+
     Storage.store(@source, :name => "lorem.txt", :bucket => "files")
   end
 
   it "should remove an existing file" do
-    object = mock("object")
-    object.should_receive(:delete).and_return(true)
-    Storage::Strategies::S3.should_receive(:find_object).with(:name => "lorem.txt", :bucket => "files").and_return(object)
+    object = double("object")
+    expect(@connection).to receive_message_chain('directories.get').with('files').and_return(@bucket)
+    expect(@bucket).to receive_message_chain('files.get').with('lorem.txt').and_return(object)
+    expect(object).to receive(:destroy).and_return(true)
 
-    Storage.remove("lorem.txt", :bucket => "files").should be_true
+    expect(Storage.remove("lorem.txt", :bucket => "files")).to be_truthy
   end
 
   it "should raise when trying to removing an unexesting file" do
-    Storage::Strategies::S3.should_receive(:find_object).and_raise(AWS::S3::NoSuchKey)
+    expect(@connection).to receive_message_chain('directories.get').with('files').and_return(@bucket)
+    expect(@bucket).to receive_message_chain('files.get').with('lorem.txt').and_return(nil)
 
     expect {
       Storage.remove("lorem.txt", :bucket => "files")
     }.to raise_error(Storage::MissingFileError)
   end
 
-  it "should retrieve an existing file" do
-    object = mock("object")
+  it "should retrieve an existing file (public url)" do
+    object = double("object", public_url: 'PUBLIC_URL')
+    expect(@connection).to receive_message_chain('directories.get').with('files').and_return(@bucket)
+    expect(@bucket).to receive_message_chain('files.get').with('lorem.txt').and_return(object)
 
-    AWS::S3::S3Object.should_receive(:find).with("lorem.txt", "files").and_return(object)
-    AWS::S3::S3Object.should_receive(:url_for).with("lorem.txt", "files", :authenticated => false)
-
-    Storage.get("lorem.txt", :bucket => "files")
+    expect(Storage.get("lorem.txt", :bucket => "files")).to eq('PUBLIC_URL')
   end
 
-  it "should raise when trying to retrieve an unexesting file" do
-    AWS::S3::S3Object.should_receive(:find).with("lorem.txt", "files").and_raise(AWS::S3::NoSuchKey)
-    AWS::S3::S3Object.should_not_receive(:url_for)
+  it "should retrieve an existing file (private url)" do
+    object = double("object", public_url: nil)
+
+    expect(object).to receive_message_chain('url').with(Time.now.to_i + 3600).and_return('PRIVATE_URL')
+    expect(@connection).to receive_message_chain('directories.get').with('files').and_return(@bucket)
+    expect(@bucket).to receive_message_chain('files.get').with('lorem.txt').and_return(object)
+
+    expect(Storage.get("lorem.txt", :bucket => "files")).to eq('PRIVATE_URL')
+  end
+
+  it "should raise when trying to retrieve an missing file" do
+    expect(@connection).to receive_message_chain('directories.get').with('files').and_return(@bucket)
+    expect(@bucket).to receive_message_chain('files.get').with('lorem.txt').and_return(nil)
 
     expect {
       Storage.get("lorem.txt", :bucket => "files")
     }.to raise_error(Storage::MissingFileError)
   end
 
-  it "should raise when saving a file that already exists" do
-    object = mock("object")
-    options = {:name => "lorem.txt", :bucket => "files"}
-    Storage::Strategies::S3.should_receive(:find_object).with(options).and_return(object)
+  it "should raise when trying to retrieve an missing bucket" do
+    expect(@connection).to receive_message_chain('directories.get').with('files').and_return(nil)
 
     expect {
-      Storage.store(@source, options)
+      Storage.get("lorem.txt", :bucket => "files")
+    }.to raise_error(Storage::MissingFileError)
+  end
+
+  it "should create a bucket and trying to store a file on a missing bucket" do
+    expect(@adapter).to receive_message_chain('find_object').and_return(nil)
+    allow(@connection).to receive_message_chain('directories.get').and_return(nil)
+    expect(@connection).to receive_message_chain('directories.create').with(key: 'files', public: false).and_return(@bucket)
+
+    @bucket.as_null_object
+
+    Storage.store(@source, :name => 'lorem.txt', :bucket => "files")
+  end
+
+  it "should raise when saving a file that already exists" do
+    object = double("object")
+
+    expect(@connection).to receive_message_chain('directories.get').with('files').and_return(@bucket)
+    expect(@bucket).to receive_message_chain('files.get').with('lorem.txt').and_return(object)
+
+    expect {
+      Storage.store(@source, :name => 'lorem.txt', :bucket => 'files')
     }.to raise_error(Storage::FileAlreadyExistsError)
   end
 end

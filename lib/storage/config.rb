@@ -29,8 +29,13 @@ module Storage
     # Override setter so we can automatically define the strategy class
     # based on its registered name.
     def self.strategy=(strategy)
-      @strategy_class = eval(Storage::Strategies::STRATEGIES[strategy])
+      @strategy_class = get_class_for_strategy(strategy)
       @strategy = strategy
+    end
+
+    def self.get_class_for_strategy(strategy)
+      Storage::Strategies::STRATEGIES[strategy].split('::')
+        .reduce(Object) {|ns, class_name| ns.const_get(class_name) }
     end
   end
 end

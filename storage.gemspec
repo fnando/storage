@@ -1,6 +1,4 @@
-# -*- encoding: utf-8 -*-
-$:.push File.expand_path("../lib", __FILE__)
-require "storage/version"
+require "./lib/storage/version"
 
 Gem::Specification.new do |s|
   s.name        = "storage"
@@ -17,12 +15,10 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 
-  s.add_dependency "aws-s3", "~> 0.6.2"
+  s.add_dependency "fog"
 
   s.add_development_dependency "rails"        , "~> 3.1"
-  s.add_development_dependency "fakeweb"      , "~> 1.3.0"
-  s.add_development_dependency "rspec-rails"  , "~> 2.7.0"
-  s.add_development_dependency "nokogiri"     , "~> 1.4.4"
-  s.add_development_dependency "sqlite3"      , "~> 1.3.3"
-  s.add_development_dependency "pry"
+  s.add_development_dependency "rspec"
+  s.add_development_dependency "transpec"
+  s.add_development_dependency "pry-meta"
 end

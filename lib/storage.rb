@@ -1,12 +1,12 @@
 require "ostruct"
-require "fileutils" unless defined?(FileUtils)
-require "storage/errors"
-require "aws/s3"
+require "fileutils"
+require "fog"
 
 module Storage
-  autoload :Config,       "storage/config"
-  autoload :Strategies,   "storage/strategies"
-  autoload :Version,      "storage/version"
+  require "storage/errors"
+  require "storage/config"
+  require "storage/strategies"
+  require "storage/version"
 
   # Set up the storage options.
   #
@@ -16,8 +16,9 @@ module Storage
   #
   # Check Storage::Config for available options.
   #
-  def self.setup(&block)
+  def self.setup
     yield Config
+    strategy.prepare!
   end
 
   # A shortcut to the current strategy.

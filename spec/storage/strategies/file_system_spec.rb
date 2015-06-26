@@ -15,21 +15,21 @@ describe Storage::Strategies::FileSystem do
     handler = File.open(@source)
     Storage.store(handler, :name => "lorem.txt")
 
-    File.should be_file(@destiny)
-    File.read(@destiny).should == File.read(@source)
+    expect(File).to be_file(@destiny)
+    expect(File.read(@destiny)).to eq(File.read(@source))
   end
 
   it "should save a file using a path" do
     Storage.store(@source, :name => "lorem.txt")
 
-    File.should be_file(@destiny)
-    File.read(@destiny).should == File.read(@source)
+    expect(File).to be_file(@destiny)
+    expect(File.read(@destiny)).to eq(File.read(@source))
   end
 
   it "should remove an existing file" do
     Storage.store(@source, :name => "lorem.txt")
-    Storage.remove("lorem.txt").should be_true
-    File.should_not be_file(@destiny)
+    expect(Storage.remove("lorem.txt")).to be_truthy
+    expect(File).not_to be_file(@destiny)
   end
 
   it "should raise when trying to removing an unexesting file" do
@@ -40,7 +40,7 @@ describe Storage::Strategies::FileSystem do
 
   it "should retrieve an existing file" do
     Storage.store(@source, :name => "lorem.txt")
-    Storage.get("lorem.txt").should == File.expand_path(TMP.join("lorem.txt"))
+    expect(Storage.get("lorem.txt")).to eq(File.expand_path(TMP.join("lorem.txt")))
   end
 
   it "should raise when trying to retrieve an unexesting file" do

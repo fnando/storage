@@ -1,7 +1,7 @@
 module Storage
   module Strategies
-    autoload :S3,           "storage/strategies/s3"
-    autoload :FileSystem,   "storage/strategies/file_system"
+    require "storage/strategies/s3"
+    require "storage/strategies/file_system"
 
     STRATEGIES = {}
 

@@ -19,8 +19,11 @@ module Storage
       # Set the S3 access key.
       attr_accessor :access_key
 
-      # Set the S3 secret key
+      # Set the S3 secret key.
       attr_accessor :secret_key
+
+      # Set the S3 region.
+      attr_accessor :region
 
       # Set the FileSystem storage path.
       attr_accessor :path

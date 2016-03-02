@@ -9,7 +9,8 @@ module Storage
         @connection ||= Fog::Storage.new({
           :provider                 => 'AWS',
           :aws_access_key_id        => Storage::Config.access_key,
-          :aws_secret_access_key    => Storage::Config.secret_key
+          :aws_secret_access_key    => Storage::Config.secret_key,
+          :region                   => Storage::Config.region
         })
       end
 

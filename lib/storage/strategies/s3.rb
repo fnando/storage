@@ -32,9 +32,6 @@ module Storage
       end
 
       def store(file, options = {})
-        object = find_object(file, options) rescue nil
-        fail FileAlreadyExistsError if object
-
         bucket = find_bucket_or_create(options.fetch(:bucket))
         file = File.open(file, "rb") unless file.respond_to?(:read) && !file.kind_of?(Pathname)
 

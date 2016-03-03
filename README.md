@@ -34,11 +34,15 @@ Storage.store "some/file.rb", name: "file.rb", bucket: "sample"
 Storage.store File.open("some/file.rb"), name: "file.rb", bucket: "sample", public: true
 
 # Retrieve the public url for that file
-Storage.get "file.rb"
+Storage.get "file.rb", bucket: "sample"
 #=> http://s3.amazon.com/sample-files/file.rb
 
+# Retrieve the public url for a private file,
+# setting expiration to 5 minutes (300 seconds).
+Storage.get "private.rb", bucket: "sample", expires: Time.now.to_i + 300
+
 # Remove a file.
-Storage.remove "file.rb"
+Storage.remove "file.rb", bucket: "sample"
 ```
 
 ### FileSystem

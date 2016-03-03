@@ -6,12 +6,12 @@ module Storage
       MissingBucket = Class.new(StandardError)
 
       def connection
-        @connection ||= Fog::Storage.new({
-          :provider                 => 'AWS',
-          :aws_access_key_id        => Storage::Config.access_key,
-          :aws_secret_access_key    => Storage::Config.secret_key,
-          :region                   => Storage::Config.region
-        })
+        @connection ||= Fog::Storage.new(
+          provider: "AWS",
+          aws_access_key_id: Storage::Config.access_key,
+          aws_secret_access_key: Storage::Config.secret_key,
+          region: Storage::Config.region
+        )
       end
 
       def prepare!
@@ -33,7 +33,7 @@ module Storage
 
       def store(file, options = {})
         object = find_object(file, options) rescue nil
-        raise FileAlreadyExistsError if object
+        fail FileAlreadyExistsError if object
 
         bucket = find_bucket_or_create(options.fetch(:bucket))
         file = File.open(file, "rb") unless file.respond_to?(:read) && !file.kind_of?(Pathname)
@@ -51,28 +51,28 @@ module Storage
       end
 
       def find_bucket!(name)
-        find_bucket(name) || raise(MissingBucket)
+        find_bucket(name) || fail(MissingBucket)
       end
 
       def create_bucket(name)
         connection.directories.create(
-          :key    => name,
-          :public => false
+          key: name,
+          public: false
         )
       end
 
       def create_object(bucket, file, options)
-        bucket.files.create({
-          :key => options.fetch(:name),
-          :body => file,
-          :public => (options[:public] || options[:access] != :public_read)
-        })
+        bucket.files.create(
+          key: options.fetch(:name),
+          body: file,
+          public: (options[:public] || options[:access] == :public_read)
+        )
       end
 
       def find_object(file, options = {})
         path = options.fetch(:name, file)
         bucket = find_bucket!(options.fetch(:bucket))
-        bucket.files.get(path) || raise(MissingFileError)
+        bucket.files.get(path) || fail(MissingFileError)
       rescue MissingBucket
         raise MissingFileError
       end

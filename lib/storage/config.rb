@@ -5,7 +5,7 @@ module Storage
       #
       #   Storage::Config.strategy = :s3
       #
-      attr_accessor :strategy
+      attr_reader :strategy
 
       # Set a storage class.
       #

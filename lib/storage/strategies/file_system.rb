@@ -35,8 +35,6 @@ module Storage
         file = File.open(file, "rb") unless file.respond_to?(:read) && !file.kind_of?(Pathname)
         path = fullpath(options[:name])
 
-        raise Storage::FileAlreadyExistsError if File.file?(path)
-
         File.open(path, "wb") do |handler|
           while line = file.gets
             handler.write line
